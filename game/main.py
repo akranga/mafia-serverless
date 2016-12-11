@@ -8,3 +8,6 @@ import logging, random, uuid
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
+
+def handler(event, context):
+  return {"Message": "Welcome to the Serverless Workshop fully powered by AWS Lambda elastic cloud computing service"}

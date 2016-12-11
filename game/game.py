@@ -63,12 +63,3 @@ def day_handler(players):
       print "{} accuses {}".format(name, players[random.choice(survived)]['name'])
 
   print "Detective, who is the mafia?"
-
-game = new_game()
-
-print game
-
-players = game['players']
-players = night_handler(players)
-print day_handler(players)
-

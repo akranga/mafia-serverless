@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := package
 
-env ?= devops-delivery
+function ?= lab01-devops-delivery
 AWS_PROFILE ?= default
 
 aws=aws --profile='$(AWS_PROFILE)'
@@ -9,7 +9,7 @@ init:
 	virtualenv .venv
   
 deploy: package
-	$(aws) lambda update-function-code --function-name="ca-cert-$(env)" --zip-file=fileb://lambda.zip --publish
+	$(aws) lambda update-function-code --function-name="$(function)" --zip-file=fileb://lambda.zip --publish
 .PHONY: deploy
 
 
@@ -19,6 +19,6 @@ install: init
 # test:
 #   python test_main.py
 
-package:
+package: install
 	yes n |rm -f lambda.zip || true
 	zip -9 -r lambda.zip . -x@.zipignore

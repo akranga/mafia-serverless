@@ -28,3 +28,15 @@ resource "aws_api_gateway_api_key" "main" {
   }
 }
 
+module "lab01_lambda" {
+  source      = "../../../agilestacks/terraform-modules//lambda"
+  # source   = "github.com/akranga/terraform-modules//lambda"
+  name        = "lab01-${var.name}"
+  handler     = "main.handler"
+  zip_file    = "${path.cwd}/game/lambda.zip"
+  policy      = "${file("${path.cwd}/game/policy.json")}"
+  kms_key_arn = "${aws_kms_key.a.arn}"
+  variables = {
+    dynamo_table = "${aws_dynamodb_table.main.name}"
+  }
+}
