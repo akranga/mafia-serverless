@@ -25,10 +25,9 @@ destroy:
 	@$(MAKE) apply
 .PHONY: destroy
 
-clean:
+clean: destroy
 	yes n |rm -f terraform.log || true
 	yes n |rm -f terraform.tfplan || true
 	yes n |rm -f terraform.tfstate || true 
-	yes n |rm -f terraform.tfstate.* || true
 	yes n |rm -fR .terraform
 .PHONY: clean
