@@ -1,0 +1,11 @@
+.venv/*
+*.zip
+.zipignore
+Makefile
+requirements.txt
+.gitignore*
+.git/*
+test_*
+lambda.zip
+policy.json
+mapping.js

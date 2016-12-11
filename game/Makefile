@@ -1,0 +1,24 @@
+.DEFAULT_GOAL := package
+
+env ?= devops-delivery
+AWS_PROFILE ?= default
+
+aws=aws --profile='$(AWS_PROFILE)'
+
+init:
+	virtualenv .venv
+  
+deploy: package
+	$(aws) lambda update-function-code --function-name="ca-cert-$(env)" --zip-file=fileb://lambda.zip --publish
+.PHONY: deploy
+
+
+install: init
+	source .venv/bin/activate && pip install chalice --upgrade &&  pip install -r requirements.txt -t lib --upgrade
+
+# test:
+#   python test_main.py
+
+package:
+	yes n |rm -f lambda.zip || true
+	zip -9 -r lambda.zip . -x@.zipignore
