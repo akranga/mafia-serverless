@@ -119,7 +119,108 @@ You should be able to get initial state of your environment
 
 3. Switch to AWS Lambda service: [direct link](https://eu-central-1.console.aws.amazon.com/lambda/home?region=eu-west-1)
 
-4. Select lambda function that has been tagged as `your-environment-name-01-new-game`
+![Screenshot 1](docs/images/pic-001.png)
 
-See example here:
-![Screenshot 1](docs/images/pic-001.png =250x)
+4. Select lambda function that has been tagged as `your-environment-name-01-new-game` 
+
+![Screenshot 3](docs/images/pic-003.png)
+
+You will see several tabs. Let me guide through these it:
+- *Code*: this tab shall be used to modify the code. Configuration management parameters can be injected via Environment Variables (scroll down)
+
+- *Configuration*: This tab has been used to customize this Lambda function. Probably ost importaant text field is: Handler. It looks like the following: `main.new_game_handler`. Where, first part corresponds to the source code file name and second part is the name of the function to be executed.
+
+Advanced settings also contains: RAM and Timeout constraints for this lambda function
+
+- *Triggers*: here you can customize event source for the Lambda function (we will come back here in further Labs)
+
+- *Monitoring*: contains reference to the LambdaFunction CloudWatch Logs. AWS Lmbda has no remote debugger functionality. So, logs become vitally important
+
+On top left you will also find few buttons. Click on blue `Test` button. For the first time you should be able to see dialog to configure test event. It must be expressed in valid JSON format. Empty event looks like on the picture (`{}`) below. And then click "Save and Test" button (bottom right corner).
+
+![Screenshot 4](docs/images/pic-004.png)
+
+If execution has been completed successfully you shouls see. Result message, and function logs as well as used RAM and Function time statistics
+
+### Modify behaviour of Lambda function
+
+Knowing how to change code and test it, let's implement `new_game_handler` function. We should be able to create create a new game (gererate Players and assign Mafia identities to them). Because we don't want to reveal players identity to the User (remember Lambda is stateless) we are going to add backend database table to our AWS Lambda. We shall use it as cache to make sure our data survive Lambda container restart. But first let's start with the behavour of the `new_game_handler` function
+
+Change imlementation to code that looks like below:
+```python
+def new_game_handler(event, context):
+  game = {
+    'GameId':     str(uuid.uuid1()),
+    'Players':    game_controller.new_game(),
+    'LastAction': 'new', 
+    'Result':     'unknown'
+  }
+
+  names = [ player['Name'] for player in game['Players'] ]
+  message = "New game started with {}".format(', '.join(names))
+  return response( {"message": message}, event)
+```
+
+For your convinience. Mafia game control logic has been already implemen ted in file `game_controller.py` which is imported in the beginning of the file
+
+Click `Save` button and then click `Test` button.
+
+You should bet something like:
+```javascript
+{
+  "message": "New game started with Christopher, Adam, Kevin, Brenda, Nicholas"
+}
+```
+Where names are randomly selected player names. Few of them are `innocent` others hide `mafia` identity.
+
+Let's add a database. If you will scroll down, you will find that Environment Variable `dynamo_table` has been set to the DynamoDB table name (that happend during provisioning with Terraform).
+
+Let's initialize this table by placing code (just below log inicialization).
+```python
+log = logging.getLogger()
+log.setLevel(logging.DEBUG)
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(os.environ['dynamo_table'])
+```
+
+And let's implement Dynamo DB CRUD functions.
+```python
+def flush_old_game():
+  resp = table.scan() 
+  for i in resp['Items']:
+    table.delete_item(Key={'GameId': i['GameId']})
+
+
+def save_game(current_state):
+  table.put_item(Item=current_state)
+
+
+def load_game():
+  resp = table.scan(Limit=1)
+  if resp['Count'] > 0:
+    return resp['Items'][0]
+
+  return {
+    'GameId':     'game not started',
+    'Players':    [],
+    'LastAction': 'game not started', 
+    'Result':     'game not started'
+  }
+```
+
+Please modify `new_game_handler` function so it would now include DB functions. You should get something like the follwing:
+
+```python
+  game = {
+    'GameId':     str(uuid.uuid1()),
+    'Players':    game_controller.new_game(),
+    'LastAction': 'new', 
+    'Result':     'unknown'
+  }
+  flush_old_game()
+  save_game(game)
+  names = [ player['Name'] for player in game['Players'] ]
+  message = "New game started with {}".format(', '.join(names))
+  return response( {"message": message}, event)
+```
