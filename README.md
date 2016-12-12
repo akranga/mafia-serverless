@@ -114,6 +114,11 @@ You should be able to get initial state of your environment
 
 1. With your Internet Browser. Connect to AWS Web Console [here](http://akranga.signin.aws.amazon.com/console?region=eu-west-1) or to your own Cloud Account.
 
-2. Switch to the region Ireland (eu-west-1). Since now we will presume you are located in the Ireland region. All links will be to this region. If you decided to go to the other region, you might want to adjust commands
+2. Switch to the region Ireland (eu-west-1). Since now we will presume you are located in the Ireland region. All links will be to this region. If you decided to go to the other region, you might want to adjust direct links to your desired region.
 
-3. Switch to AWS Lambda service. 
+3. Switch to AWS Lambda service: [direct link](https://eu-central-1.console.aws.amazon.com/lambda/home?region=eu-west-1)
+
+4. Select lambda function that has been tagged as `your-environment-name-01-new-game`
+
+See example here:
+[[https://github.com/akranga/mafia-serverless/raw/master/docs/pic-001.png]]
