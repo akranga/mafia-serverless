@@ -9,7 +9,7 @@ export terraform=terraform
 
 export TF_OPTS ?=
 
-all: plan apply 
+all: package plan apply
 
 plan:
 	$(terraform) get -update $(env)
@@ -31,3 +31,12 @@ clean: destroy
 	yes n |rm -f terraform.tfstate || true 
 	yes n |rm -fR .terraform
 .PHONY: clean
+
+package:
+	cd game && $(MAKE) package
+.PHONY: package
+
+
+out:
+	$(terraform) output --state=terraform.tfstate
+.PHONY: out

@@ -2,14 +2,9 @@ resource "aws_dynamodb_table" "main" {
     name = "player-${uuid()}"
     read_capacity = 20
     write_capacity = 20
-    hash_key = "Name"
-    range_key = "Identity"
+    hash_key = "GameId"
     attribute {
-      name = "Name"
-      type = "S"
-    }
-    attribute {
-      name = "Identity"
+      name = "GameId"
       type = "S"
     }
     # global_secondary_index {
