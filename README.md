@@ -122,4 +122,4 @@ You should be able to get initial state of your environment
 4. Select lambda function that has been tagged as `your-environment-name-01-new-game`
 
 See example here:
-[[https://github.com/akranga/mafia-serverless/raw/master/docs/pic-001.png]]
+![Screenshot 1](docs/images/pic-001.png)
