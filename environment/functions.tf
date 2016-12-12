@@ -1,5 +1,5 @@
 resource "aws_lambda_function" "new_game" {
-    function_name    = "${var.name}-new-game"
+    function_name    = "${var.name}-01-new-game"
     filename         = "${path.cwd}/game/lambda.zip"
     runtime          = "python2.7"
     role             = "${aws_iam_role.iam_for_lambda.arn}"
@@ -17,7 +17,7 @@ resource "aws_lambda_function" "new_game" {
 
 
 resource "aws_lambda_function" "night_murder" {
-    function_name    = "${var.name}-night-murder"
+    function_name    = "${var.name}-03-night-murder"
     filename         = "${path.cwd}/game/lambda.zip"
     runtime          = "python2.7"
     role             = "${aws_iam_role.iam_for_lambda.arn}"
@@ -35,7 +35,7 @@ resource "aws_lambda_function" "night_murder" {
 
 
 resource "aws_lambda_function" "daily_accusition" {
-    function_name    = "${var.name}-day-accusition"
+    function_name    = "${var.name}-04-day-accusition"
     filename         = "${path.cwd}/game/lambda.zip"
     runtime          = "python2.7"
     role             = "${aws_iam_role.iam_for_lambda.arn}"
@@ -52,7 +52,7 @@ resource "aws_lambda_function" "daily_accusition" {
 }
 
 resource "aws_lambda_function" "check_game_state" {
-    function_name    = "${var.name}-game-state"
+    function_name    = "${var.name}-02-game-state"
     filename         = "${path.cwd}/game/lambda.zip"
     runtime          = "python2.7"
     role             = "${aws_iam_role.iam_for_lambda.arn}"
@@ -69,7 +69,7 @@ resource "aws_lambda_function" "check_game_state" {
 }
 
 resource "aws_lambda_function" "user_judgement" {
-    function_name    = "${var.name}-user-judgement"
+    function_name    = "${var.name}-05-user-judgement"
     filename         = "${path.cwd}/game/lambda.zip"
     runtime          = "python2.7"
     role             = "${aws_iam_role.iam_for_lambda.arn}"
@@ -84,16 +84,3 @@ resource "aws_lambda_function" "user_judgement" {
       }
     }
 }
-
-# module "lab01_lambda" {
-#   # source      = "../../../agilestacks/terraform-modules//lambda"
-#   source   = "github.com/akranga/terraform-modules//lambda"
-#   name        = "lab01-${var.name}"
-#   handler     = "main.handler"
-#   zip_file    = "${path.cwd}/game/lambda.zip"
-#   policy      = "${file("${path.cwd}/game/policy.json")}"
-#   kms_key_arn = "${aws_kms_key.a.arn}"
-#   variables = {
-#     dynamo_table = "${aws_dynamodb_table.main.name}"
-#   }
-# }
