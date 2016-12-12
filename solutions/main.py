@@ -101,21 +101,21 @@ def day_handler(event, context):
 def judgement_handler(event, context):
   log.debug(json.dumps(event, separators=(',', ':')))
 
-  accused_player = event['queryStringParameters']
+  accused_player = event['queryStringParameters']['player']
 
   game    = load_game()
 
   players = game['Players']
+
   accused = game_controller.find_by_name(players, accused_player)
-  if convicted == None:
+  if accused == None:
     return response( {"Message": "Sorry player {} not found".format(accused_player)}, event, 404)
 
   sentensed = players[accused]
-
   if sentensed['Identity'] == 'mafia':
     sentensed['Identity'] = 'Sentensed, guilty!'
     sentence = "{} is guilty!".format(sentensed['Name'])
-  elif sentensed['Idenity'] == 'innocent':
+  elif sentensed['Identity'] == 'innocent':
     sentensed['Identity'] = 'Sentensed, guilty!'
     sentence = "{} is not guilty!".format(sentensed['Name'])
   else:
