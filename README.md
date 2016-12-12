@@ -123,7 +123,7 @@ You should be able to get initial state of your environment
 
 4. Select lambda function that has been tagged as `your-environment-name-01-new-game` 
 
-![Screenshot 3](docs/images/pic-003.png)
+![Screenshot 2](docs/images/pic-002.png)
 
 You will see several tabs. Let me guide through these it:
 - *Code*: this tab shall be used to modify the code. Configuration management parameters can be injected via Environment Variables (scroll down)
@@ -138,11 +138,13 @@ Advanced settings also contains: RAM and Timeout constraints for this lambda fun
 
 On top left you will also find few buttons. Click on blue `Test` button. For the first time you should be able to see dialog to configure test event. It must be expressed in valid JSON format. Empty event looks like on the picture (`{}`) below. And then click "Save and Test" button (bottom right corner).
 
-![Screenshot 4](docs/images/pic-004.png)
+![Screenshot 3](docs/images/pic-003.png)
 
 If execution has been completed successfully you shouls see. Result message, and function logs as well as used RAM and Function time statistics
 
-### Modify behaviour of Lambda function
+![Screenshot 4](docs/images/pic-004.png)
+
+### Lab 01.2: Modify behaviour of Lambda function
 
 Knowing how to change code and test it, let's implement `new_game_handler` function. We should be able to create create a new game (gererate Players and assign Mafia identities to them). Because we don't want to reveal players identity to the User (remember Lambda is stateless) we are going to add backend database table to our AWS Lambda. We shall use it as cache to make sure our data survive Lambda container restart. But first let's start with the behavour of the `new_game_handler` function
 
@@ -212,6 +214,7 @@ def load_game():
 Please modify `new_game_handler` function so it would now include DB functions. You should get something like the follwing:
 
 ```python
+def new_game_handler(event, context):
   game = {
     'GameId':     str(uuid.uuid1()),
     'Players':    game_controller.new_game(),
@@ -223,4 +226,149 @@ Please modify `new_game_handler` function so it would now include DB functions. 
   names = [ player['Name'] for player in game['Players'] ]
   message = "New game started with {}".format(', '.join(names))
   return response( {"message": message}, event)
+```
+
+Checking the data. We can switch to the `DynamoDB` service by following this [link](https://eu-west-1.console.aws.amazon.com/dynamodb/home?region=eu-west-1)
+
+Navigate to the database that has been propogated to the Lambda function through the environment variable. `make out` can help to navigate the command
+
+![Screenshot 5](docs/images/pic-005.png)
+
+You can drill down to the data 
+
+![Screenshot 6](docs/images/pic-006.png)
+
+### Lab 01.2: Add behavior to the game_state_handler function
+
+In a similar manner let's come back to our lambda functions [link](http://akranga.signin.aws.amazon.com/console?region=eu-west-1)
+
+![Screenshot 1](docs/images/pic-001.png)
+
+Now let's select function `your-environment-name-02-game-state`
+
+Before we try to modify this function, let's make shure it works. Click "Test"button and end "empty" (`{}`) as Test Input Message. If you see the same  as on the screenshot below...
+
+![Screenshot 2](docs/images/pic-002.png)
+
+...then you feel free to proceed with this activity. Otherwise you might want to correct error first.
+
+!!! Please apply same modifications as they were for for *Lab 01.1* and then add the following 
+
+```python
+def game_state_handler(event, context):
+  game = load_game()
+  players = game['Players']
+  game_controller.hide_uncovered_identities( players )
+  return response(game, event)
+```
+
+Then click "Test". You shuld see function execution successfull otherwise you might want to correct an error.
+
+### Lab 01.3: Add behavior to night_murder function
+
+Based on what you learned in *Lab 01.1* and *Lab 01.2*
+let's modify all other functions. (!!! Don't forget to propogate DB shared functions)
+
+And Lambda implementation code:
+```python
+def night_handler(event, context):
+  game = load_game()
+  players = game['Players']
+
+  victim = game_controller.victim_of_mafia(players)
+
+  players[victim]['Identity'] = 'killed'
+  game['LastAction']          = 'night murder'
+
+  save_game(game)
+  return response( {"Message": [
+      "Night, time to sleep",
+      "Mafia awaken",
+      "Mafia kills {}".format(players[victim]['Name']),
+      "Mafia sleeps"
+    ]}, event)
+```
+
+Uppon successful execution you should see something like this
+```javascript
+{
+  "Message": [
+    "Night, time to sleep",
+    "Mafia awaken",
+    "Mafia kills Deborah",
+    "Mafia sleeps"
+  ]
+}
+```
+
+### Lab 01.4: Add behavior to daily_accusition function
+
+Very similar to previous ones:
+```python
+def day_handler(event, context):
+  game = load_game()
+  players = game['Players']
+  accusitions = game_controller.get_players_accusitions(players)
+  log.info("accusitions")
+  log.info(accusitions)
+  game['LastAction'] = 'day accusitions'
+  return response( {"Message": ["Day, time to awaken"
+                                "Players accuse each other"] 
+                                + accusitions + 
+                               ["Who is the guilty?"] }, event)
+
+```
+
+And successful execution result should look like this
+```javascript
+{
+  "Message": [
+    "Day, time to awakenPlayers accuse each other",
+    "Deborah is dead",
+    "Amy accuses Gregory",
+    "Brandon accuses Brandon",
+    "Dennis accuses Amy",
+    "Gregory accuses Amy",
+    "Who is the guilty?"
+  ]
+}
+```
+
+### Lab 01.5: Add behavior to judgement function
+
+Propogate DB shared functions and lambda handler
+```python
+
+def judgement_handler(event, context):
+  log.debug(json.dumps(event, separators=(',', ':')))
+
+  accused_player = event['queryStringParameters']['player']
+
+  game    = load_game()
+
+  players = game['Players']
+
+  accused = game_controller.find_by_name(players, accused_player)
+  if accused == None:
+    return response( {"Message": "Sorry player {} not found".format(accused_player)}, event, 404)
+
+  sentensed = players[accused]
+  if sentensed['Identity'] == 'mafia':
+    sentensed['Identity'] = 'Sentensed, guilty!'
+    sentence = "{} is guilty!".format(sentensed['Name'])
+  elif sentensed['Identity'] == 'innocent':
+    sentensed['Identity'] = 'Sentensed, guilty!'
+    sentence = "{} is not guilty!".format(sentensed['Name'])
+  else:
+    return response( {"Message": "Sorry player {} is {} ".format(accused_player, sentensed['Identity'])}, event, 403) 
+
+```
+
+But you will see this function relies on user argument that comes with event
+```javascript
+{
+  "body": "{\"Message\":[\"Amy has been accused\",\"Plyers identity has been revealed\",\"Amy is not guilty!\"]}",
+  "headers": {},
+  "statusCode": 200
+}
 ```
