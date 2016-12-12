@@ -87,7 +87,7 @@ Down't worry. Wait 30 seconds to allow API Gateway to settle down and then run `
 
 After completion you should be able to see creted resources by terraform. Pleaser put note of Terrform output, we are going to need it later.
 
-Example Terraform output
+Example of Terraform output
 
 ```
 api_gateway_url = https://meo41ti2r7.execute-api.eu-west-1.amazonaws.com/prod
@@ -98,7 +98,8 @@ lambda_arn_03_night_murder = arn:aws:lambda:eu-west-1:111222333444:function:my-e
 lambda_arn_04_daily_accusition = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-day-accusition
 lambda_arn_05_user_judgement = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-user-judgement
 role_arn = arn:aws:iam::111222333444:role/role-00688b5357814c9474f5424323
-role_name = role-00688b5357814c9474f5424323```
+role_name = role-00688b5357814c9474f5424323
+```
 
 If you missed outputs. You can always run: `make out` to see outputs again.
 
