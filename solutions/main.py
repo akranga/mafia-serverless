@@ -116,7 +116,7 @@ def judgement_handler(event, context):
     sentensed['Identity'] = 'Sentensed, guilty!'
     sentence = "{} is guilty!".format(sentensed['Name'])
   elif sentensed['Identity'] == 'innocent':
-    sentensed['Identity'] = 'Sentensed, guilty!'
+    sentensed['Identity'] = 'Sentensed, not guilty!'
     sentence = "{} is not guilty!".format(sentensed['Name'])
   else:
     return response( {"Message": "Sorry player {} is {} ".format(accused_player, sentensed['Identity'])}, event, 403) 

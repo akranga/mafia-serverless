@@ -338,7 +338,6 @@ And successful execution result should look like this
 
 Propogate DB shared functions and lambda handler
 ```python
-
 def judgement_handler(event, context):
   log.debug(json.dumps(event, separators=(',', ':')))
 
@@ -357,11 +356,19 @@ def judgement_handler(event, context):
     sentensed['Identity'] = 'Sentensed, guilty!'
     sentence = "{} is guilty!".format(sentensed['Name'])
   elif sentensed['Identity'] == 'innocent':
-    sentensed['Identity'] = 'Sentensed, guilty!'
+    sentensed['Identity'] = 'Sentensed, not guilty!'
     sentence = "{} is not guilty!".format(sentensed['Name'])
   else:
     return response( {"Message": "Sorry player {} is {} ".format(accused_player, sentensed['Identity'])}, event, 403) 
 
+  game['LastAction'] = 'judgement'
+  save_game(game)
+
+  return response( {"Message": [
+      "{} has been accused".format(sentensed['Name']),
+      "Plyers identity has been revealed",
+      sentence
+    ]}, event)
 ```
 
 But you will see this function relies on user argument that comes with event
