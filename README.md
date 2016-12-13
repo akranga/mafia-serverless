@@ -379,3 +379,8 @@ But you will see this function relies on user argument that comes with event
   "statusCode": 200
 }
 ```
+
+### Tear Down
+
+To destroy your cloud resources, please run:
+`make destroy`
