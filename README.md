@@ -476,6 +476,94 @@ At the same time. LAMBDA-PROXY integration also formalizes an incoming event for
 }
 ```
 
+Taking into account LAMBDA-PROXY integration limitations, it is still highly recommended if you stick with it. If you want more flexibility then you might want to revert to the LAMBDA integration. In this case you will need to specify itegration transformation template. For this purpose we recommend to use following template (or customize it if you want). This is most minimalistic form that will act like a LAMBDA-PROXY integration.
+
+```javascript
+#set($allParams = $input.params())
+{
+"body-json" : $input.json('$'),
+"base64-body": "$util.base64Encode($input.body)",
+"params" : {
+#foreach($type in $allParams.keySet())
+  #set($params = $allParams.get($type))
+"$type" : {
+  #foreach($paramName in $params.keySet())
+  "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+      #if($foreach.hasNext),#end
+  #end
+}
+  #if($foreach.hasNext),#end
+#end
+},
+"stage-variables" : {
+#foreach($key in $stageVariables.keySet())
+"$key" : "$util.escapeJavaScript($stageVariables.get($key))"
+  #if($foreach.hasNext),#end
+#end
+},
+"context" : {
+  "account-id": "$context.identity.accountId",
+  "api-id": "$context.apiId",
+  "api-key": "$context.identity.apiKey",
+  "authorizer-principal-id": "$context.authorizer.principalId",
+  "caller": "$context.identity.caller",
+  "cognito-authentication-provider":     "$context.identity.cognitoAuthenticationProvider",
+  "cognito-authentication-type": "$context.identity.cognitoAuthenticationType",
+  "cognito-identity-id": "$context.identity.cognitoIdentityId",
+  "cognito-identity-pool-id": "$context.identity.cognitoIdentityPoolId",
+  "http-method": "$context.httpMethod",
+  "stage": "$context.stage",
+  "source-ip": "$context.identity.sourceIp",
+  "user": "$context.identity.user",
+  "user-agent": "$context.identity.userAgent",
+  "user-arn": "$context.identity.userArn",
+  "request-id": "$context.requestId",
+  "resource-id": "$context.resourceId",
+  "resource-path": "$context.resourcePath"
+  }
+}
+```
+
+### LAB 02.1 Implement API for all other functions
+
+Now for this activity let's proceed with all other functions and expose. You can proceed from LAMBDA to API GATEWAY (as we previously have done) or API GATEWAY to LAMBDA for maximum flexibility
+
+Go back to API Gateway and create a Resource and a GET method to it
+
+1. Select "Action" => "Create Resourse"
+
+![Screenshot 14](docs/images/pic-014.png)
+
+2. Fill "game-state" resource
+
+![Screenshot 15](docs/images/pic-015.png)
+
+If you implement enpoint for AJAX request, then you might want to enable CORS (then don't forget to add OPTIONS method as per CORS specification). But we do not do it now
+
+3. Let's add a new method to our recently created resource
+
+![Screenshot 16](docs/images/pic-016.png)
+
+4. Select GET method and click "OK" round button
+
+![Screenshot 17](docs/images/pic-017.png)
+
+5. Select:
+
+* Integration Type: Lambda Function
+* Lambda Proxy Integration: `CHECKED` (for yes)
+* Lambda Region: `eu-west-1` (or your region)
+* Lambda Function: `your-environment-02-game-state`
+
+![Screenshot 18](docs/images/pic-018.png)
+
+6. You will be prompted to confirm security settings
+
+![Screenshot 19](docs/images/pic-019.png)
+
+This will add Lambda trust relationship between API Gateway and Lambda function
+
+
 # Clean Up
 
 To destroy your cloud resources, please run:
