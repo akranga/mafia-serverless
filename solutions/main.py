@@ -129,7 +129,3 @@ def judgement_handler(event, context):
       "Plyers identity has been revealed",
       sentence
     ]}, event)
-
-
-def handler(event, context):
-  return response( {"Message": "Welcome to the Serverless Workshop fully powered by AWS Lambda elastic cloud computing service"}, event)

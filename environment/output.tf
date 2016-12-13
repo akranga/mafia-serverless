@@ -10,14 +10,9 @@ output "role_arn" {
   value = "${aws_iam_role.iam_for_lambda.arn}"
 }
 
-# output "kms_id" {
-#   value = "${aws_kms_key.a.key_id}"
-# }
-
 output "kms_arn" {
   value = "${aws_kms_key.a.arn }"
 }
-
 
 output "lambda_arn_01_new_game" {
   value = "${aws_lambda_function.new_game.arn }"

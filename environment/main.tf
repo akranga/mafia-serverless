@@ -1,6 +1,7 @@
 provider "aws" {
-    profile = "${var.aws_profile}"
     region  = "${var.aws_region}"
+    access_key = "${var.aws_access_key}"
+    secret_key = "${var.aws_secret_key}"
 }
 
 module "apig" {
@@ -32,16 +33,3 @@ resource "aws_kms_key" "a" {
     description = "KMS key 1"
     deletion_window_in_days = 10
 }
-
-# module "lab01_lambda" {
-#   # source      = "../../../agilestacks/terraform-modules//lambda"
-#   source   = "github.com/akranga/terraform-modules//lambda"
-#   name        = "lab01-${var.name}"
-#   handler     = "main.handler"
-#   zip_file    = "${path.cwd}/game/lambda.zip"
-#   policy      = "${file("${path.cwd}/game/policy.json")}"
-#   kms_key_arn = "${aws_kms_key.a.arn}"
-#   variables = {
-#     dynamo_table = "${aws_dynamodb_table.main.name}"
-#   }
-# }

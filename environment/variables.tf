@@ -14,3 +14,12 @@ variable "aws_profile" {
   description = "aws profile from .aws/config file"
   default = "default"
 }
+
+
+variable "aws_access_key" {
+  type = "string"
+}
+
+variable "aws_secret_key" {
+  type = "string"
+}
