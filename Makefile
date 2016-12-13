@@ -4,6 +4,7 @@ export env  ?= environment
 
 export TF_LOG := debug
 export TF_LOG_PATH := terraform.log
+export SHELL := /bin/bash
 
 export terraform=terraform
 

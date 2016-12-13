@@ -2,6 +2,7 @@
 
 function ?= lab01-devops-delivery
 AWS_PROFILE ?= default
+SHELL := /bin/bash
 
 aws=aws --profile='$(AWS_PROFILE)'
 
@@ -13,9 +14,9 @@ deploy: package
 .PHONY: deploy
 
 
-install: init
+install:
 	source .venv/bin/activate && pip install chalice --upgrade &&  pip install -r requirements.txt -t lib --upgrade
 
-package: install
+package:
 	yes n |rm -f lambda.zip || true
 	zip -9 -r lambda.zip . -x@.zipignore
