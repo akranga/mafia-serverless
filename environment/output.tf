@@ -1,9 +1,9 @@
 output "api_gateway_url" {
-  value = "https://${module.apig.endpoint_host}/${aws_api_gateway_deployment.prod.stage_name}"
+  value = "https://${aws_api_gateway_rest_api.main.endpoint_host}/${aws_api_gateway_deployment.prod.stage_name}"
 }
 
 output "api_gateway_name" {
-  value = "${module.apig.name}"
+  value = "${aws_api_gateway_rest_api.main.name}"
 }
 
 output "role_name" {
