@@ -144,7 +144,7 @@ If execution has been completed successfully you shouls see. Result message, and
 
 ![Screenshot 4](docs/images/pic-004.png)
 
-### Lab 01.2: Modify behaviour of Lambda function
+### LAB 01.2: Modify behaviour of Lambda function
 
 Knowing how to change code and test it, let's implement `new_game_handler` function. We should be able to create create a new game (gererate Players and assign Mafia identities to them). Because we don't want to reveal players identity to the User (remember Lambda is stateless) we are going to add backend database table to our AWS Lambda. We shall use it as cache to make sure our data survive Lambda container restart. But first let's start with the behavour of the `new_game_handler` function
 
@@ -238,7 +238,7 @@ You can drill down to the data
 
 ![Screenshot 6](docs/images/pic-006.png)
 
-### Lab 01.2: Add behavior to the game_state_handler function
+### LAB 01.2: Add behavior to the game_state_handler function
 
 In a similar manner let's come back to our lambda functions [link](http://akranga.signin.aws.amazon.com/console?region=eu-west-1)
 
@@ -252,7 +252,7 @@ Before we try to modify this function, let's make shure it works. Click "Test"bu
 
 ...then you feel free to proceed with this activity. Otherwise you might want to correct error first.
 
-!!! Please apply same modifications as they were for for *Lab 01.1* and then add the following 
+!!! Please apply same modifications as they were for for *LAB 01.1* and then add the following 
 
 ```python
 def game_state_handler(event, context):
@@ -264,9 +264,9 @@ def game_state_handler(event, context):
 
 Then click "Test". You shuld see function execution successfull otherwise you might want to correct an error.
 
-### Lab 01.3: Add behavior to night_murder function
+### LAB 01.3: Add behavior to night_murder function
 
-Based on what you learned in *Lab 01.1* and *Lab 01.2*
+Based on what you learned in *LAB 01.1* and *LAB 01.2*
 let's modify all other functions. (!!! Don't forget to propogate DB shared functions)
 
 And Lambda implementation code:
@@ -301,7 +301,7 @@ Uppon successful execution you should see something like this
 }
 ```
 
-### Lab 01.4: Add behavior to daily_accusition function
+### LAB 01.4: Add behavior to daily_accusition function
 
 Very similar to previous ones:
 ```python
@@ -334,7 +334,7 @@ And successful execution result should look like this
 }
 ```
 
-### Lab 01.5: Add behavior to judgement function
+### LAB 01.5: Add behavior to judgement function
 
 Propogate DB shared functions and lambda handler
 ```python
@@ -380,7 +380,12 @@ But you will see this function relies on user argument that comes with event
 }
 ```
 
+# LAB 2
+
+Vizualise
+
 ### Tear Down
 
 To destroy your cloud resources, please run:
 `make destroy`
+
