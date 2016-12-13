@@ -10,14 +10,33 @@ import game_controller
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
-#
-# API Gateway feature called Lambda Proxy relies on
-# response in specific format, otherwise it will trhow 
-# a runtime error.
-# 
-# This is why for proper check incoming event if it looks
-# like an event from API Gateway then make response for Lambda-Proxy form
-#
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(os.environ['dynamo_table'])
+
+
+def flush_old_game():
+  resp = table.scan() 
+  for i in resp['Items']:
+    table.delete_item(Key={'GameId': i['GameId']})
+
+
+def save_game(current_state):
+  table.put_item(Item=current_state)
+
+
+def load_game():
+  resp = table.scan(Limit=1)
+  if resp['Count'] > 0:
+    return resp['Items'][0]
+
+  return {
+    'GameId':     'game not started',
+    'Players':    [],
+    'LastAction': 'game not started', 
+    'Result':     'game not started'
+  }
+
+
 def response(body, event, code=200):
   if 'resource' in event and 'httpMethod' in event:
     return {

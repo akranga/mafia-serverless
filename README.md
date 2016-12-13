@@ -95,7 +95,7 @@ kms_arn = arn:aws:kms:eu-west-1:111222333444:key/0caebd58-5cec-4499-89cb-03eda35
 lambda_arn_01_new_game = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-new-game
 lambda_arn_02_check_game_state = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-game-state
 lambda_arn_03_night_murder = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-night-murder
-lambda_arn_04_daily_accusition = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-day-accusition
+lambda_arn_04_daily_accusation = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-day-accusation
 lambda_arn_05_user_judgement = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-user-judgement
 role_arn = arn:aws:iam::111222333444:role/role-00688b5357814c9474f5424323
 role_name = role-00688b5357814c9474f5424323
@@ -301,20 +301,18 @@ Uppon successful execution you should see something like this
 }
 ```
 
-### LAB 01.4: Add behavior to daily_accusition function
+### LAB 01.4: Add behavior to daily_accusation function
 
 Very similar to previous ones:
 ```python
 def day_handler(event, context):
   game = load_game()
   players = game['Players']
-  accusitions = game_controller.get_players_accusitions(players)
-  log.info("accusitions")
-  log.info(accusitions)
-  game['LastAction'] = 'day accusitions'
+  accusations = game_controller.get_players_accusations(players)
+  game['LastAction'] = 'day accusations'
   return response( {"Message": ["Day, time to awaken"
                                 "Players accuse each other"] 
-                                + accusitions + 
+                                + accusations + 
                                ["Who is the guilty?"] }, event)
 
 ```
@@ -566,6 +564,8 @@ This will add Lambda trust relationship between API Gateway and Lambda function
 ### LAB 02.2 Implement API for all other functions
 
 Now you should be able to complete integrations for all other functions at your pase
+
+
 
 
 # Clean Up

@@ -40,16 +40,16 @@ def victim_of_mafia(players):
   innocent = find_by_identity(players, 'innocent')
   return random.choice(innocent)
 
-def get_players_accusitions(players):
+def get_players_accusations(players):
   innocent  = find_by_identity(players, 'innocent')
   everybody = innocent + find_by_identity(players, 'mafia')
-  accusitions = []
+  accusations = []
   for index, player in enumerate(players):
     name = player['Name']
     if player['Identity'] == "killed":
-      accusitions.append( "{} is dead".format(players[index]['Name']) )
+      accusations.append( "{} is dead".format(players[index]['Name']) )
     if player['Identity'] == "mafia":
-      accusitions.append( "{} accuses {}".format(name, players[random.choice(innocent)]['Name']) )
+      accusations.append( "{} accuses {}".format(name, players[random.choice(innocent)]['Name']) )
     if player['Identity'] == "innocent":
-      accusitions.append( "{} accuses {}".format(name, players[random.choice(everybody)]['Name']) )
-  return accusitions
+      accusations.append( "{} accuses {}".format(name, players[random.choice(everybody)]['Name']) )
+  return accusations

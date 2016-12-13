@@ -30,8 +30,8 @@ output "lambda_arn_03_night_murder" {
   value = "${aws_lambda_function.night_murder.arn }"
 }
 
-output "lambda_arn_04_daily_accusition" {
-  value = "${aws_lambda_function.daily_accusition.arn }"
+output "lambda_arn_04_daily_accustion" {
+  value = "${aws_lambda_function.daily_accusation.arn }"
 }
 
 output "lambda_arn_05_user_judgement" {

@@ -89,13 +89,13 @@ def night_handler(event, context):
 def day_handler(event, context):
   game = load_game()
   players = game['Players']
-  accusitions = game_controller.get_players_accusitions(players)
-  log.info("accusitions")
-  log.info(accusitions)
-  game['LastAction'] = 'day accusitions'
+  accusations = game_controller.get_players_accusations(players)
+  log.info("accusations")
+  log.info(accusations)
+  game['LastAction'] = 'day accusations'
   return response( {"Message": ["Day, time to awaken"
                                 "Players accuse each other"] 
-                                + accusitions + 
+                                + accusations + 
                                ["Who is the guilty?"] }, event)
 
 def judgement_handler(event, context):

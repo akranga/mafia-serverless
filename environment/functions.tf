@@ -34,8 +34,8 @@ resource "aws_lambda_function" "night_murder" {
 }
 
 
-resource "aws_lambda_function" "daily_accusition" {
-    function_name    = "${var.name}-04-day-accusition"
+resource "aws_lambda_function" "daily_accusation" {
+    function_name    = "${var.name}-04-day-accusation"
     filename         = "${path.cwd}/game/lambda.zip"
     runtime          = "python2.7"
     role             = "${aws_iam_role.iam_for_lambda.arn}"
