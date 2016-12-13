@@ -524,7 +524,7 @@ Taking into account LAMBDA-PROXY integration limitations, it is still highly rec
 }
 ```
 
-### LAB 02.1 Implement API for all other functions
+### LAB 02.1 Implement API Gateway to Lambda integration
 
 Now for this activity let's proceed with all other functions and expose. You can proceed from LAMBDA to API GATEWAY (as we previously have done) or API GATEWAY to LAMBDA for maximum flexibility
 
@@ -562,6 +562,10 @@ If you implement enpoint for AJAX request, then you might want to enable CORS (t
 ![Screenshot 19](docs/images/pic-019.png)
 
 This will add Lambda trust relationship between API Gateway and Lambda function
+
+### LAB 02.2 Implement API for all other functions
+
+Now you should be able to complete integrations for all other functions at your pase
 
 
 # Clean Up
