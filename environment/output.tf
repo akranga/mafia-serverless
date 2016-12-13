@@ -2,6 +2,10 @@ output "api_gateway_url" {
   value = "https://${module.apig.endpoint_host}/${aws_api_gateway_deployment.prod.stage_name}"
 }
 
+output "api_gateway_name" {
+  value = "${module.apig.name}"
+}
+
 output "role_name" {
   value = "${aws_iam_role.iam_for_lambda.name}"
 }
