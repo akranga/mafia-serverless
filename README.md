@@ -380,11 +380,103 @@ But you will see this function relies on user argument that comes with event
 }
 ```
 
-# LAB 2
+# LAB 2 Create an API
 
-Vizualise
+We created few AWS Lambdas now let's expose it to the users so they can access it. For this purpose we need an API Gateway Service that will encapsulate AWS lambdas behind REST interface and will privide convinient endpoints
 
-### Tear Down
+With our terraform script. We already created an instance of AWS API Gateway
+
+We will use only `open` (unsecured) endpoints today.
+
+Before we start just check your API ednpoint name
+
+Run following command
+
+```
+$ make out
+
+Outputs:
+
+api_gateway_name = api.devops-days
+api_gateway_url = https://mzckcf11cd.execute-api.eu-west-1.amazonaws.com/prod
+```
+
+1. Go to AWS Lambda service: [direct link](https://eu-central-1.console.aws.amazon.com/lambda/home?region=eu-west-1)
+
+2. Select lambda function that has been tagged as `your-environment-name-01-new-game` 
+
+![Screenshot 1](docs/images/pic-001.png)
+
+3. Switch to 'Triggers' tab and press "Add new trigger"
+
+4. Click on "dotted square" on the left from AWS Lambda icon (see screenshot below) and select API Gateway
+
+![Screenshot 8](docs/images/pic-008.png)
+
+5. In the new dialog:
+    * API name: select your API gateway (terraform output should help to find your).
+    * Deployment stage: prod
+    * Security: open
+
+![Screenshot 9](docs/images/pic-009.png)
+
+6. By the completion of this step you should see someting like below:
+
+![Screenshot 10](docs/images/pic-010.png)
+
+7. Now switch to API Gateway service: [link](https://eu-west-1.console.aws.amazon.com/apigateway/home?region=eu-west-1#/apis)
+
+8. Select your API
+
+![Screenshot 11](docs/images/pic-011.png)
+
+9. Then expand resources and click '/' -> GET -> `your-environment-01-new-game` -> ANY (all http methods)
+
+![Screenshot 12](docs/images/pic-012.png)
+
+10. Click "Test" button near "Client" integration
+
+11. Select *GET* method from the dropdown 
+
+![Screenshot 13](docs/images/pic-013.png)
+
+And click 'Test button'. In the AWS Lambda you will find following code
+
+``` python
+def response(body, event, code=200):
+    # ...
+    return {
+        'statusCode': code,
+        'headers': {},
+        'body': json.dumps(body, separators=(',', ':')) 
+      }
+```
+
+Let me explain this function. You probably noticed that AWS automatically generated LAMBDA-PROXY integration. This integration expects specific response. Otherwise API Gateway will throw a runtime error.
+
+You must return:
+* 'statuCode': integer value
+* 'headers': or at least empty dictionary
+* 'body': is a string (you your response to JSON and then convert it to the string)
+
+At the same time. LAMBDA-PROXY integration also formalizes an incoming event format. It will always in the form 
+
+```javascript
+{
+    "body": null,
+    "resource": "/",
+    "requestContext": {},
+    "queryStringParameters": {},
+    "httpMethod": "GET",
+    "pathParameters": null,
+    "headers": null,
+    "stageVariables": null,
+    "path": "/",
+    "isBase64Encoded": false
+}
+```
+
+# Clean Up
 
 To destroy your cloud resources, please run:
 `make destroy`
