@@ -15,34 +15,9 @@ log.setLevel(logging.DEBUG)
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['DYNAMO_TABLE'])
 
-
-def find_by_identity(identity):
-  return table.scan(
-           FilterExpression=Attr('TrueIdentity').eq(identity) & 
-                            Attr('Identity').eq('Uncovered')
-          )['Items']
-
-
-def save(player):
-  table.put_item(Item=player)
-
-
+# Night murder is happening here
 def handler(event, context): 
-  players = find_by_identity('Innocent')
-  if len(players) == 0:
-    return response( mafia_win_message(), event)
-
-  victim  = random.choice(players)
-  victim['Identity'] = 'Killed by mafia'
-
-  save(victim)
-  return response( {"Message": [
-      "Night, time to sleep",
-      "Mafia awakes",
-      "Mafia kills {}".format(victim['Name']),
-      "Mafia sleeps"
-    ]}, event)
-
+  return response( {"Message": "Welcome to the Serverless Workshop fully powered by AWS Lambda elastic cloud computing service"}, event)
 
 
 def mafia_win_message():
@@ -59,8 +34,7 @@ def response(body, event, code=200):
     return {
         'statusCode': code,
         'headers': {},
-        'body': json.dumps(body, indent=4, cls=DecimalEncoder, separators=(',', ':')) 
-        # 'body': json.dumps(body, separators=(',', ':')) 
+        'body': json.dumps(body, indent=4, separators=(',', ':')) 
       }
   return body
 

@@ -10,19 +10,19 @@
       Type: Number
       Default: '8'
       MinValue: '1'
-      MaxValue: '2048'
+      MaxValue: '32'
       ConstraintDescription: must be between 1 and 2014
     NumberOfMafia:
-      Description: Number of players with hidden Mafia idenityu
+      Description: Number of players with hidden Mafia identities
       Type: Number
       Default: '3'
       MinValue: '1'
-      MaxValue: '2048'
+      MaxValue: '32'
       ConstraintDescription: must be between 1 and 2014
     LambdaCodeS3Bucket:
       Description: S3 bucket with initial lambda source code
       Type: String
-      Default: 'agile-code  '
+      Default: 'mafia-workshop-sourcecode'
       MinLength: '1'
       MaxLength: '2048'
       ConstraintDescription: must contain valid domain name

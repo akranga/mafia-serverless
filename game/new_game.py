@@ -24,35 +24,12 @@ with open('names.txt', 'r') as f:
 # This is a handler method that creates a new game
 # and stores it's state in the database.
 # 
-# TODO: Bootstrap a DynamoDB (check env vars for lambda
+# TODO: Bootstrap a DynamoDB (check env vars for lambda)
+# Then check game_controller (where logic of Mafia Game encoded)
+# and implement a new game
 #
-def handler(event, context):
-  num_of_players = int(os.environ['NUMBER_OF_PLAYERS'])
-  num_of_mafia   = int(os.environ['NUMBER_OF_MAFIA'])
-  clear_all()
-
-  names  = random.sample(all_names, num_of_players)
-  mafia  = random.sample(range(0, num_of_players), num_of_mafia)
-
-  for i in range(num_of_players):
-    player = {
-      'Name': names[i],
-      'TrueIdentity': 'Mafia' if i in mafia else 'Innocent',
-      'Identity':     'Uncovered'
-    }
-    save(player)
-
-  message = "New game started with {}".format(', '.join(names))
-  return response( {"message": message}, event )
-
-
-def clear_all():
-  for i in table.scan()['Items']:
-    table.delete_item(Key={'Name': i['Name']})
-
-
-def save(player):
-  table.put_item(Item=player)
+def new_game_handler(event, context):
+  return response( {"Message": "Welcome to the Serverless Workshop fully powered by AWS Lambda elastic cloud computing service"}, event)
 
 
 def response(body, event, code=200):
@@ -60,8 +37,7 @@ def response(body, event, code=200):
     return {
         'statusCode': code,
         'headers': {},
-        'body': json.dumps(body, indent=4, cls=DecimalEncoder, separators=(',', ':')) 
-        # 'body': json.dumps(body, separators=(',', ':')) 
+        'body': json.dumps(body, indent=4, separators=(',', ':')) 
       }
   return body
 

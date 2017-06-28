@@ -71,7 +71,6 @@ def response(body, event, code=200):
     return {
         'statusCode': code,
         'headers': {},
-        'body': json.dumps(body, indent=4, cls=DecimalEncoder, separators=(',', ':')) 
-        # 'body': json.dumps(body, separators=(',', ':')) 
+        'body': json.dumps(body, indent=4, separators=(',', ':')) 
       }
   return body

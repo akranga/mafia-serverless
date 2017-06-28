@@ -1,9 +1,8 @@
 .DEFAULT_GOAL := release
 
-function ?= lab01-devops-delivery
 AWS_PROFILE ?= default
 SHELL := /bin/bash
-S3BUCKET ?= "agile-code"
+S3BUCKET ?= mafia-workshop-sourcecode
 
 aws=aws --profile='$(AWS_PROFILE)'
 

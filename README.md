@@ -21,27 +21,11 @@ We need to have a comprehensive toolset of the tools to do development for serve
 
 - *AWS*: cloud native services of Amazon Web Services. They are far behind of Google and Microsoft (in terms of maturity of cloud services for serverless )
 
-- *Terraform*: FaaS does not live in the vacuum. In order it to exist it needs to operatie with other cloud resources such as: storage, security, networking, eetc. So, instead of single FaaS (AWS Lambda) we need to deploy a stack of interconnected cloud resources. Terraform a "Mercedes" of the stacks provisioning. It's capabiilties goes beyond similar service from Amazon.
+- *CloudFormation*: This is an AWS service that can deploy whole stack as a single unit. In case of failure it should be able to roll it back as well.
 
 - *Python 2.7*: You don't need to be an expert of Python to complete this workshop however some programming experience (any language is good) can be be efitial. We have choisen Python because it is easier to illustrate some of the FaaS concepts rather than other language runtimes (such as: nodejs or Java)
 
-- *CMake*: After spending some time with tons of differnet build tools. Author decided to pick CMake as a canonical build tool. It is less opiniated and well know for few decades (+ easy to learn)
-
-
-# Lifecicle of the CMake
-
-Well, CMake is probably easiest tool you can imagine. Everything has been expressed in `Makefile`. It should be operated from the same directory where `Makefile` exists. You need to run `make <tsk-name>` and that's it. \
-
-Here are our tasks. As you will see (check the `Makefile`) it wraps some terraform commands, so you would have better user experience.
-
-`plan` - this task allows to build deployment plan for Terraform
-
-`deploy` - this applies deployment plan built by previous command
-
-`all` - combines both tasks (this also a default task for makefile)
-
-`destroy` - deletes stack that has been built with Terraform
-
+http://akranga.signin.aws.amazon.com/console?region=eu-west-1
 
 # LAB - 0: prep the environment
 
@@ -52,64 +36,28 @@ There are two options how to use this workshop.
 
 If you use your own cloud then many steps from this tutororial can be skipped.
 
-### Setting up Terraform variables
+### Lab 00: Setting up the environment
 
-Choose a good name. Please note, the name for your environment needs to be unique but distinctive. It needs to be "small letters and dash separated"
+1. With your Internet Browser. Connect to AWS Web Console [here](http://akranga.signin.aws.amazon.com/console?region=eu-west-1) or to your own Cloud Account.
 
-Once you are ready: create a Terraform variables file: `terraform.tfvars`
+2. Switch to the region Ireland (eu-west-1). Since now we will presume you are located in the Ireland region. All links will be to this region. If you decided to go to the other region, you might want to adjust direct links to your desired region.
 
-```
-name = "your-wonderful-name"
-aws_region = "eu-west-1"
-aws_profile = "default"
-```
+3. Select CloudFormation Service. The easiest is to do to click on "Services" menu and enter in the search field "CloudFormation"
+![Screenshot](docs/images/pic-020.png)
 
-Make shure you have Terraform available in the PATH environment variable:
+4. Click "CreateStack" big blue button
 
-- You already have Terraform instlled (v0.7.2 and later). 
-- Download one from (http://terraform.io/downloads.html)
-- Copy from USB stick
+5. Next select "Upload a template to Amazon S3". To do this you need to clone current repository or store this CloudFormation template in your workstation and upload it with the browser. [Template File](cloudformation/stack.yaml)
 
-If you want to run Terraform from your custom location, then please adjust `Makefile` (line # 8 to point to terraform alternative location)
+![Screenshot](docs/images/pic-021.png)
 
-By completion you should ber abe to run terraform via `Makefile`. Run following command:
+6. Then please choose **"Stack name"** It must be unique per region. However you should be able to identify your stack later. Other parameters can be left unchanged
 
-`make all`
+7. On the next pate, please check **"Advanced"** button. And **Rollback on failure** set to *No*
 
-Waring Bug ahead: If terraform provisioning fails with error: 
+8. On the last screen please check **I acknowledge that AWS CloudFormation might create IAM resources.** Then you should be able to see how your stack has been progressing
 
-```
-aws_api_gateway_deployment.prod: Error creating API Gateway Deployment: BadRequestException: No integration defined for method
-    status code: 400, request id: 6b25f33c-c04e-11e6-9ee2-7525de577dec
-```
-
-Down't worry. Wait 30 seconds to allow API Gateway to settle down and then run `make all` command again.
-
-After completion you should be able to see creted resources by terraform. Pleaser put note of Terrform output, we are going to need it later.
-
-Example of Terraform output
-
-```
-api_gateway_url = https://meo41ti2r7.execute-api.eu-west-1.amazonaws.com/prod
-kms_arn = arn:aws:kms:eu-west-1:111222333444:key/0caebd58-5cec-4499-89cb-03eda35774e5
-lambda_arn_01_new_game = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-new-game
-lambda_arn_02_check_game_state = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-game-state
-lambda_arn_03_night_murder = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-night-murder
-lambda_arn_04_daily_accusation = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-day-accusation
-lambda_arn_05_user_judgement = arn:aws:lambda:eu-west-1:111222333444:function:my-environment-name-user-judgement
-role_arn = arn:aws:iam::111222333444:role/role-00688b5357814c9474f5424323
-role_name = role-00688b5357814c9474f5424323
-```
-
-If you missed outputs. You can always run: `make out` to see outputs again.
-
-If you messed up enironment. Run the following
-```
-make destroy
-make all
-```
-
-You should be able to get initial state of your environment
+9. Validate: your stack should become from **CREATE_IN_PROGRESS** to **CREATE_COMPLETE**. Then feel free to proceed to the **Lab 01**
 
 ### LAB 01: Getting started with AWS Lambda
 
@@ -146,24 +94,65 @@ If execution has been completed successfully you shouls see. Result message, and
 
 ### LAB 01.2: Modify behaviour of Lambda function
 
-Knowing how to change code and test it, let's implement `new_game_handler` function. We should be able to create create a new game (gererate Players and assign Mafia identities to them). Because we don't want to reveal players identity to the User (remember Lambda is stateless) we are going to add backend database table to our AWS Lambda. We shall use it as cache to make sure our data survive Lambda container restart. But first let's start with the behavour of the `new_game_handler` function
+Knowing how to change code and test it, let's implement `new.handler` function. We should be able to create create a new game (gererate Players and assign Mafia identities to them). Because we don't want to reveal players identity to the User (remember Lambda is stateless) we are going to add backend database table to our AWS Lambda. We shall use it as cache to make sure our data survive Lambda container restart. But first let's start with the behavour of the `hanlder` function.
 
-Change imlementation to code that looks like below:
+Before we start to do any changes let's add some code outside of `handler` function
+
 ```python
-def new_game_handler(event, context):
-  game = {
-    'GameId':     str(uuid.uuid1()),
-    'Players':    game_controller.new_game(),
-    'LastAction': 'new', 
-    'Result':     'unknown'
-  }
+# all player names has been written in the text file
+# we read all of them into list so later we can pick random
+# to name our Players
+with open('names.txt', 'r') as f:
+  all_names = f.read().splitlines()
 
-  names = [ player['Name'] for player in game['Players'] ]
-  message = "New game started with {}".format(', '.join(names))
-  return response( {"message": message}, event)
 ```
 
-For your convinience. Mafia game control logic has been already implemen ted in file `game_controller.py` which is imported in the beginning of the file
+To begin game we need to choose some of the players names. These names has been written in the text file and `names.txt` code above will read them into the list
+
+Because we will generate players for the game and write them into the databae (DynamoDB) we need to write a couple of functions for storage
+
+```python
+
+# deleate all records in the table
+def clear_all():
+  for i in table.scan()['Items']:
+    table.delete_item(Key={'Name': i['Name']})
+
+# save one record in the dynamo table
+def save(player):
+  table.put_item(Item=player)
+```
+
+Now is the most important. We need to write implementation of the so called `hamdler` funtion. This exactly function will be executed by lambda. Logic is quite sophisticated. Let me try to explain the algorithm 
+
+1. We pick number of players and number of mafia players from the environment variables (injected by CloudFormation)
+2. We pick several (number of players) of random names from the `names.txt` file.
+3. We at random we choose (number of mafia) players and assign this identity as `TrueIdentity` attribute of the player
+4. Other players will be `Innocent`
+5. Attribute `Identity` will be by default `Uncovered`
+6. We store everything in DynamoDB
+
+```python
+def handler(event, context):
+  num_of_players = int(os.environ['NUMBER_OF_PLAYERS'])
+  num_of_mafia   = int(os.environ['NUMBER_OF_MAFIA'])
+  clear_all()
+
+  names  = random.sample(all_names, num_of_players)
+  mafia  = random.sample(range(0, num_of_players), num_of_mafia)
+
+  for i in range(num_of_players):
+    player = {
+      'Name': names[i],
+      'TrueIdentity': 'Mafia' if i in mafia else 'Innocent',
+      'Identity':     'Uncovered'
+    }
+    save(player)
+
+  message = "New game started with {}".format(', '.join(names))
+  return response( {"message": message}, event )
+
+```
 
 Click `Save` button and then click `Test` button.
 
@@ -183,54 +172,12 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['dynamo_table'])
-```
-
-And let's implement Dynamo DB CRUD functions.
-```python
-def flush_old_game():
-  resp = table.scan() 
-  for i in resp['Items']:
-    table.delete_item(Key={'GameId': i['GameId']})
-
-
-def save_game(current_state):
-  table.put_item(Item=current_state)
-
-
-def load_game():
-  resp = table.scan(Limit=1)
-  if resp['Count'] > 0:
-    return resp['Items'][0]
-
-  return {
-    'GameId':     'game not started',
-    'Players':    [],
-    'LastAction': 'game not started', 
-    'Result':     'game not started'
-  }
-```
-
-Please modify `new_game_handler` function so it would now include DB functions. You should get something like the follwing:
-
-```python
-def new_game_handler(event, context):
-  game = {
-    'GameId':     str(uuid.uuid1()),
-    'Players':    game_controller.new_game(),
-    'LastAction': 'new', 
-    'Result':     'unknown'
-  }
-  flush_old_game()
-  save_game(game)
-  names = [ player['Name'] for player in game['Players'] ]
-  message = "New game started with {}".format(', '.join(names))
-  return response( {"message": message}, event)
+table = dynamodb.Table(os.environ['DYNAMO_TABLE'])
 ```
 
 Checking the data. We can switch to the `DynamoDB` service by following this [link](https://eu-west-1.console.aws.amazon.com/dynamodb/home?region=eu-west-1)
 
-Navigate to the database that has been propogated to the Lambda function through the environment variable. `make out` can help to navigate the command
+You can select DynamoDB service to check content of your table. Please be aware there might be other tables.
 
 ![Screenshot 5](docs/images/pic-005.png)
 
@@ -238,7 +185,7 @@ You can drill down to the data
 
 ![Screenshot 6](docs/images/pic-006.png)
 
-### LAB 01.2: Add behavior to the game_state_handler function
+### LAB 01.2: Let's implement check state function
 
 In a similar manner let's come back to our lambda functions [link](http://akranga.signin.aws.amazon.com/console?region=eu-west-1)
 
@@ -255,126 +202,280 @@ Before we try to modify this function, let's make shure it works. Click "Test"bu
 !!! Please apply same modifications as they were for for *LAB 01.1* and then add the following 
 
 ```python
-def game_state_handler(event, context):
-  game = load_game()
-  players = game['Players']
-  game_controller.hide_uncovered_identities( players )
-  return response(game, event)
+# Scan and return all records of the game however hides true identity attribute
+def handler(event, context):
+  return table.scan()['Items']
 ```
+
+This is probably the easiest modification. We need to scan all items in the table. 
 
 Then click "Test". You shuld see function execution successfull otherwise you might want to correct an error.
 
-### LAB 01.3: Add behavior to night_murder function
+```json
+ {
+    "TrueIdentity": "Innocent",
+    "Name": "Michelle",
+    "Identity": "Uncovered"
+  },
+  {
+    "TrueIdentity": "Mafia",
+    "Name": "Christine",
+    "Identity": "Uncovered"
+  },
+  ...
+]
+```
+
+Oops we accidentally leaked identity of the players. This makes this game pointless. However we do have a projection with the Secondary Index called `Masked`. You can test it in DynamoDB service
+
+See screenshot:
+![DynamoDB](docs/images/pic-022.png)
+
+Let's modify our lambda code so it would like the following
+
+```python
+# Scan and return all records of the game however hides true identity attribute
+def handler(event, context):
+  return table.scan(IndexName='Masked')['Items']
+```
+
+Then we should have no issues anymore. Click test to see:
+
+```json
+[
+  {
+    "Name": "Michelle",
+    "Identity": "Uncovered"
+  },
+  {
+    "Name": "Christine",
+    "Identity": "Uncovered"
+  },
+  ...
+]
+```
+
+
+
+### LAB 01.3: Add behavior to night-turn function
 
 Based on what you learned in *LAB 01.1* and *LAB 01.2*
-let's modify all other functions. (!!! Don't forget to propogate DB shared functions)
+let's modify all other functions. (!!! Don't forget to propogate DB shared functions).
+
+Do you remember game rules? During the night Mafia chooses victim among the innocent people and kills one of them. Mafia never kills their kind. Only innocent people. 
+
+So, to start we need to write query to the dynamo 
+```python
+
+def find_by_identity(identity):
+  return table.scan(
+           FilterExpression=Attr('TrueIdentity').eq(identity) & 
+                            Attr('Identity').eq('Uncovered')
+          )['Items']
+```
+
+Let's also add save to database method
+```python
+def save(player):
+  table.put_item(Item=player)
+```
+
+To remember result of mafia deeds.
+
+Now we should be ready to apply our `handler` code
 
 And Lambda implementation code:
 ```python
-def night_handler(event, context):
-  game = load_game()
-  players = game['Players']
+def handler(event, context):
+  players = find_by_identity('Innocent')
+  if len(players) == 0:
+    return response( mafia_win_message(), event)
 
-  victim = game_controller.victim_of_mafia(players)
+  victim  = random.choice(players)
+  victim['Identity'] = 'Killed by mafia'
 
-  players[victim]['Identity'] = 'killed'
-  game['LastAction']          = 'night murder'
-
-  save_game(game)
+  save(victim)
   return response( {"Message": [
       "Night, time to sleep",
-      "Mafia awaken",
-      "Mafia kills {}".format(players[victim]['Name']),
+      "Mafia awakes",
+      "Mafia kills {}".format(victim['Name']),
       "Mafia sleeps"
     ]}, event)
 ```
 
-Uppon successful execution you should see something like this
+Upon successful execution you should see something like this
 ```javascript
 {
   "Message": [
     "Night, time to sleep",
-    "Mafia awaken",
-    "Mafia kills Deborah",
+    "Mafia awakes",
+    "Mafia kills Carol",
     "Mafia sleeps"
   ]
 }
 ```
 
-### LAB 01.4: Add behavior to daily_accusation function
+
+
+### LAB 01.4: Add behavior to day-turn function
+
+During the day. Everybody makes a hypotesys who is the Mafia and makes accusations. Here are the rules:
+
+1. Mafia knows true identities of each other and not accuse themselves. They point to Innocent
+2. Innocent people don't know who is the Mafia and try to identify it
+3. Players should agree about player to sentence. This will happen in the next turn.
+
+Code of the function `your-environment-04-day-turn` looks very similar to previous one. As usual we start with the backend code
 
 Very similar to previous ones:
 ```python
-def day_handler(event, context):
-  game = load_game()
-  players = game['Players']
-  accusations = game_controller.get_players_accusations(players)
-  game['LastAction'] = 'day accusations'
-  return response( {"Message": ["Day, time to awaken"
-                                "Players accuse each other"] 
-                                + accusations + 
-                               ["Who is the guilty?"] }, event)
+def find_all_uncovered():
+  return table.scan(
+           FilterExpression=Attr('Identity').eq('Uncovered')
+          )['Items']
 
+
+def find_by_identity(identity):
+  return table.scan(
+           FilterExpression=Attr('TrueIdentity').eq(identity) & 
+                            Attr('Identity').eq('Uncovered')
+          )['Items']
 ```
+
+We need two function... That will fetch all 'Uncovered' or in the other words 'Living' players and another function to help mafia to filter `Mafia`  and leave `Innocent` people. Please note we do not use secondary index. Otherwise our we cannot lookup by `TrueIdentity` attribute
+
+And now the `handler` code. Here is the sequence:
+
+1. We lookup `Innocent` players among the "living"
+2. We lookup all players
+3. If `TrueIdentity` of a player is `Mafia` then they choose random person among `Innocent`. Otherwise among `Everybody`
+4. So you see that probabily that people will blame innocent is bigger. This is how players can guess the Mafia. They never blame their kind.
+
+```python
+def handler(event, context): 
+  message = [
+    "Day, time to wake up!",
+    "Players see the dead body and makes their accusations"
+  ]
+
+  innocent = find_by_identity('Innocent')
+  anybody  = find_all_uncovered()
+
+  for player in anybody:
+    if player['TrueIdentity'] == 'Mafia':
+      accused = random.choice(innocent)
+    else:
+      accused = random.choice(anybody)
+    message.append("{} blames on {}".format(player['Name'], accused['Name']))
+
+  message.append("Who is the Mafia?")
+  return response({"Message": message}, event)
+```
+
+
 
 And successful execution result should look like this
 ```javascript
 {
   "Message": [
-    "Day, time to awakenPlayers accuse each other",
-    "Deborah is dead",
-    "Amy accuses Gregory",
-    "Brandon accuses Brandon",
-    "Dennis accuses Amy",
-    "Gregory accuses Amy",
-    "Who is the guilty?"
+    "Day, time to wake up!",
+    "Players see the dead body and makes their accusations",
+    "Michelle blames on Stephen",
+    "Christine blames on Barbara",
+    "Heather blames on Emily",
+    "Stephen blames on Barbara",
+    "Emily blames on Michael",
+    "Michael blames on Stephen",
+    "Barbara blames on Michelle",
+    "Who is the Mafia?"
   ]
 }
 ```
 
 ### LAB 01.5: Add behavior to judgement function
 
-Propogate DB shared functions and lambda handler
+Select `your-environment-05-judgement` lambda function'
+
+Last but not least. User will make a sentence. Then the player should uncover her `TrueIdentity` and leave the game.
+
+User will pass the name of the player to sentence as input parameter. So, we will need to lookup `uncovered` by it's name. We also write `save` function to persist results of the sentence.
+
 ```python
-def judgement_handler(event, context):
-  log.debug(json.dumps(event, separators=(',', ':')))
+def find_by_name(name):
+  result = table.scan(
+           FilterExpression=Attr('Identity').eq('Uncovered') &
+                            Attr('Name').eq(name)
+          )['Items']
+  return result[0] if result else None
 
-  accused_player = event['queryStringParameters']['player']
-
-  game    = load_game()
-
-  players = game['Players']
-
-  accused = game_controller.find_by_name(players, accused_player)
-  if accused == None:
-    return response( {"Message": "Sorry player {} not found".format(accused_player)}, event, 404)
-
-  sentensed = players[accused]
-  if sentensed['Identity'] == 'mafia':
-    sentensed['Identity'] = 'Sentensed, guilty!'
-    sentence = "{} is guilty!".format(sentensed['Name'])
-  elif sentensed['Identity'] == 'innocent':
-    sentensed['Identity'] = 'Sentensed, not guilty!'
-    sentence = "{} is not guilty!".format(sentensed['Name'])
-  else:
-    return response( {"Message": "Sorry player {} is {} ".format(accused_player, sentensed['Identity'])}, event, 403) 
-
-  game['LastAction'] = 'judgement'
-  save_game(game)
-
-  return response( {"Message": [
-      "{} has been accused".format(sentensed['Name']),
-      "Plyers identity has been revealed",
-      sentence
-    ]}, event)
+def save(player):
+  table.put_item(Item=player)
 ```
 
-But you will see this function relies on user argument that comes with event
+User Parameter will come as user event a
+
+
+
+```python
+def handler(event, context):
+  log.debug(json.dumps(event, separators=(',', ':')))
+
+  name      = event['Name']
+  sentenced = find_by_name(name)
+  ...
+```
+
+Now in the test event we myst pass name
 ```javascript
 {
-  "body": "{\"Message\":[\"Amy has been accused\",\"Plyers identity has been revealed\",\"Amy is not guilty!\"]}",
-  "headers": {},
-  "statusCode": 200
+  "Name": "John"
+}
+```
+
+John might not be there... in this case we return `404` Not found
+
+```python
+  ...
+  sentenced = find_by_name(name)
+  if sentenced == None:
+    return response({
+        "Message": "Player with name {} not found".format(name)
+      }, event, 404
+    )
+```
+
+Check out for method `response`. It will be important for API Gateway integration
+
+And now let's write our judgment logic below. If Player has been  found
+```python
+  if sentenced['TrueIdentity'] == 'Mafia':
+    sentenced['Identity'] = 'Correctly sentenced'
+    message = [
+        'Mafia has been uncovered!',
+        'Guilty member of mafia {} has been sentenced!'.format(sentenced['Name'])
+      ]
+  else:
+    sentenced['Identity'] = 'Incorrectly sentenced'
+    message = [
+        'Mafia has not been uncovered!',
+        'Innocent {} has been sentenced unfairly'.format(sentenced['Name'])
+      ]
+  
+  save(sentenced)
+  return response({"Message": message}, event)
+```
+
+TODO... As the bonus you might want to add some more logic to finish the game. Because now Mafia or Innocent people can win the game (killing all Innocent people or identifying all Mafia)
+
+Look at the `night-turn` function for inspiration
+
+Result might look like the following
+```javascript
+{
+  "Message": [
+    "Mafia has been uncovered!",
+    "Guilty member of mafia Christine has been sentenced!"
+  ]
 }
 ```
 
@@ -570,6 +671,8 @@ Now you should be able to complete integrations for all other functions at your 
 
 # Clean Up
 
-To destroy your cloud resources, please run:
-`make destroy`
+To destroy your cloud resources, please run: Go to CloudFormation service  and delete your stack
+
+
+Thank you!!!
 

@@ -12,13 +12,9 @@ log.setLevel(logging.DEBUG)
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['DYNAMO_TABLE'])
 
-
+# Scan and return all records of the game however hides true identity attribute
 def handler(event, context):
   return table.scan(IndexName='Masked')['Items']
-
-
-def save(player):
-  table.put_item(Item=player)
 
 
 def response(body, event, code=200):
@@ -26,6 +22,6 @@ def response(body, event, code=200):
     return {
         'statusCode': code,
         'headers': {},
-        'body': json.dumps(body, indent=4, cls=DecimalEncoder, separators=(',', ':')) 
+        'body': json.dumps(body, indent=4, separators=(',', ':')) 
       }
   return body

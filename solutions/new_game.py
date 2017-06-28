@@ -46,11 +46,12 @@ def handler(event, context):
   return response( {"message": message}, event )
 
 
+# deleate all records in the table
 def clear_all():
   for i in table.scan()['Items']:
     table.delete_item(Key={'Name': i['Name']})
 
-
+# save one record in the dynamo table
 def save(player):
   table.put_item(Item=player)
 
@@ -60,7 +61,7 @@ def response(body, event, code=200):
     return {
         'statusCode': code,
         'headers': {},
-        'body': json.dumps(body, indent=4, cls=DecimalEncoder, separators=(',', ':')) 
+        'body': json.dumps(body, indent=4, separators=(',', ':')) 
         # 'body': json.dumps(body, separators=(',', ':')) 
       }
   return body

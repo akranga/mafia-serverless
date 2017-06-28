@@ -16,54 +16,9 @@ dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['DYNAMO_TABLE'])
 
 
-def get_name_from_event(event):
-  if 'queryStringParameters' in event:
-    if 'Name' in event['queryStringParameters']:
-      return event['queryStringParameters']['Name']
-  return event['Name']
-
-
-def find_by_name(name):
-  result = table.scan(
-           FilterExpression=Attr('Identity').eq('Uncovered') &
-                            Attr('Name').eq(name)
-          )['Items']
-  return result[0] if result else None
-
-
+# Player should pass `Name` parameter in the event to sentence player
 def handler(event, context):
-  log.debug(json.dumps(event, separators=(',', ':')))
-
-  name      = get_name_from_event(event)
-  sentenced = find_by_name(name)
-  if sentenced == None:
-    return response({
-        "Message": "Player with name {} not found".format(name)
-      }, event, 404
-    )
-
-  print(sentenced)
-  if sentenced['TrueIdentity'] == 'Mafia':
-    sentenced['Identity'] = 'Correctly sentenced'
-    message = [
-        'Mafia has been uncovered!',
-        'Guilty member of mafia {} has been sentenced!'.format(sentenced['Name'])
-      ]
-  else:
-    sentenced['Identity'] = 'Incorrectly sentenced'
-    message = [
-        'Mafia has not been uncovered!',
-        'Innocent {} has been sentenced unfairly'.format(sentenced['Name'])
-      ]
-  
-  save(sentenced)
-  return response({"Message": message}, event)
-
-
-
-def save(player):
-  table.put_item(Item=player)
-
+  return response( {"Message": "Welcome to the Serverless Workshop fully powered by AWS Lambda elastic cloud computing service"}, event)
 
 
 def response(body, event, code=200):
@@ -71,7 +26,6 @@ def response(body, event, code=200):
     return {
         'statusCode': code,
         'headers': {},
-        'body': json.dumps(body, indent=4, cls=DecimalEncoder, separators=(',', ':')) 
-        # 'body': json.dumps(body, separators=(',', ':')) 
+        'body': json.dumps(body, indent=4, separators=(',', ':')) 
       }
   return body
