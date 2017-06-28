@@ -1,0 +1,221 @@
+  AWSTemplateFormatVersion: '2010-09-09'
+  Metadata: 
+    License: Apache-2.0
+  Description: |
+    AWS CloudFormation that creates number of lambda functions IAM and DynamoDB.
+    Please beware you will be charged by AWS uppon provisioning of this stack
+  Parameters:
+    NumberOfPlayers:
+      Description: Total number of players in the game
+      Type: Number
+      Default: '8'
+      MinValue: '1'
+      MaxValue: '2048'
+      ConstraintDescription: must be between 1 and 2014
+    NumberOfMafia:
+      Description: Number of players with hidden Mafia idenityu
+      Type: Number
+      Default: '3'
+      MinValue: '1'
+      MaxValue: '2048'
+      ConstraintDescription: must be between 1 and 2014
+    LambdaCodeS3Bucket:
+      Description: S3 bucket with initial lambda source code
+      Type: String
+      Default: 'agile-code  '
+      MinLength: '1'
+      MaxLength: '2048'
+      ConstraintDescription: must contain valid domain name
+    LambdaCodeS3Key:
+      Description: Location in S3 bucket with initial lambda source code
+      Type: String
+      Default: lambda.zip
+      MinLength: '1'
+      MaxLength: '2048'
+      ConstraintDescription: must contain valid file path
+  Resources:
+    NewGameLamba:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        FunctionName: 
+          Fn::Join:
+          - '-'
+          - - !Ref AWS::StackName
+            - '01-new-game'
+        Handler: "new_game.handler"
+        Role: 
+          Fn::GetAtt: 
+          - "LambdaExecutionRole"
+          - "Arn"
+        Code: 
+          S3Bucket: !Ref 'LambdaCodeS3Bucket'
+          S3Key: !Ref 'LambdaCodeS3Key'
+        Runtime: "python2.7"
+        MemorySize: '128'
+        Timeout: "60"
+        TracingConfig:
+          Mode: "Active"
+        Environment:
+          Variables:
+            NUMBER_OF_PLAYERS: !Ref 'NumberOfPlayers'
+            NUMBER_OF_MAFIA: !Ref 'NumberOfMafia'
+            DYNAMO_TABLE: !Ref 'DynamoTable'
+    GetStateLamba:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        FunctionName: 
+          Fn::Join:
+          - '-'
+          - - !Ref AWS::StackName
+            - '02-get-state'
+        Handler: "state.handler"
+        Role: 
+          Fn::GetAtt: 
+          - "LambdaExecutionRole"
+          - "Arn"
+        Code: 
+          S3Bucket: !Ref 'LambdaCodeS3Bucket'
+          S3Key: !Ref 'LambdaCodeS3Key'
+        Runtime: "python2.7"
+        MemorySize: '128'
+        Timeout: "60"
+        TracingConfig:
+          Mode: "Active"
+        Environment:
+          Variables:
+            DYNAMO_TABLE: !Ref 'DynamoTable'
+    NightTurn:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        FunctionName: 
+          Fn::Join:
+          - '-'
+          - - !Ref AWS::StackName
+            - '03-night-turn'
+        Handler: "night.handler"
+        Role: 
+          Fn::GetAtt: 
+          - "LambdaExecutionRole"
+          - "Arn"
+        Code: 
+          S3Bucket: !Ref 'LambdaCodeS3Bucket'
+          S3Key: !Ref 'LambdaCodeS3Key'
+        Runtime: "python2.7"
+        MemorySize: '128'
+        Timeout: "60"
+        TracingConfig:
+          Mode: "Active"
+        Environment:
+          Variables:
+            DYNAMO_TABLE: !Ref 'DynamoTable'
+    DayTurn:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        FunctionName: 
+          Fn::Join:
+          - '-'
+          - - !Ref AWS::StackName
+            - '04-day-turn'
+        Handler: "day.handler"
+        Role: 
+          Fn::GetAtt: 
+          - "LambdaExecutionRole"
+          - "Arn"
+        Code: 
+          S3Bucket: !Ref 'LambdaCodeS3Bucket'
+          S3Key: !Ref 'LambdaCodeS3Key'
+        Runtime: "python2.7"
+        MemorySize: '128'
+        Timeout: "60"
+        TracingConfig:
+          Mode: "Active"
+        Environment:
+          Variables:
+            DYNAMO_TABLE: !Ref 'DynamoTable'
+    JudgementTurn:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        FunctionName: 
+          Fn::Join:
+          - '-'
+          - - !Ref AWS::StackName
+            - '05-judgement'
+        Handler: "judge.handler"
+        Role: 
+          Fn::GetAtt: 
+          - "LambdaExecutionRole"
+          - "Arn"
+        Code: 
+          S3Bucket: !Ref 'LambdaCodeS3Bucket'
+          S3Key: !Ref 'LambdaCodeS3Key'
+        Runtime: "python2.7"
+        MemorySize: '128'
+        Timeout: "60"
+        TracingConfig:
+          Mode: "Active"
+        Environment:
+          Variables:
+            DYNAMO_TABLE: !Ref 'DynamoTable'
+
+    # IAM Role to allow lambda execution on certain resources
+    LambdaExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+            - sts:AssumeRole
+        Path: "/"
+        Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - logs:*
+              - lambda:*
+              - xray:PutTraceSegments
+              - xray:PutTelemetryRecords
+              - dynamodb:*
+              Resource: '*'
+
+    # Dynamo DB Table will act as the backend for us
+    DynamoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+        - AttributeName: 'Name'
+          AttributeType: 'S'
+        KeySchema:
+        - AttributeName: 'Name'
+          KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: '5'
+          WriteCapacityUnits: '10'
+        # We will also use custom projection to hide True identities
+        GlobalSecondaryIndexes:
+        - IndexName: "Masked"
+          KeySchema: 
+          - AttributeName: 'Name'
+            KeyType: HASH
+          Projection: 
+            NonKeyAttributes : ["Identity","Status"]
+            ProjectionType: "INCLUDE"
+          ProvisionedThroughput:
+            ReadCapacityUnits: '5'
+            WriteCapacityUnits: '10'
+    RestApi: 
+      Type: "AWS::ApiGateway::RestApi"
+      Properties: 
+        Description: RESTful API
+        Name: !Ref AWS::StackName
+  Outputs:
+    TableName:
+      Value: !Ref 'DynamoTable'
+      Description: Table name of the newly created DynamoDB table

@@ -1,7 +1,5 @@
 .DEFAULT_GOAL := all
 
-export env  ?= environment
-
 export TF_LOG := debug
 export TF_LOG_PATH := terraform.log
 export SHELL := /bin/bash
@@ -13,8 +11,8 @@ export TF_OPTS ?=
 all: package plan apply
 
 plan:
-	$(terraform) get -update $(env)
-	$(terraform) plan $(TF_OPTS) -module-depth=-1 -state=terraform.tfstate -var-file terraform.tfvars -out terraform.tfplan environment
+	$(terraform) get -update
+	$(terraform) plan $(TF_OPTS) -module-depth=-1 -state=terraform.tfstate -var-file terraform.tfvars -out terraform.tfplan
 .PHONY: plan
 
 apply:
@@ -22,7 +20,7 @@ apply:
 .PHONY: apply
 
 destroy:
-	$(terraform) plan $(TF_OPTS) -destroy -var-file terraform.tfvars -state=terraform.tfstate -out terraform.tfplan environment
+	$(terraform) plan $(TF_OPTS) -destroy -var-file terraform.tfvars -state=terraform.tfstate -out terraform.tfplan
 	@$(MAKE) apply
 .PHONY: destroy
 
@@ -34,7 +32,8 @@ clean: destroy
 .PHONY: clean
 
 package:
-	cd game && $(MAKE) package
+	cd ../game && $(MAKE) package
+	cp -f ../game/lambda.zip .
 .PHONY: package
 
 

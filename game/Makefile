@@ -1,8 +1,9 @@
-.DEFAULT_GOAL := package
+.DEFAULT_GOAL := release
 
 function ?= lab01-devops-delivery
 AWS_PROFILE ?= default
 SHELL := /bin/bash
+S3BUCKET ?= "agile-code"
 
 aws=aws --profile='$(AWS_PROFILE)'
 
@@ -20,3 +21,8 @@ install:
 package:
 	yes n |rm -f lambda.zip || true
 	zip -9 -r lambda.zip . -x@.zipignore
+
+release: package
+	$(aws) s3 cp lambda.zip s3://$(S3BUCKET)/lambda.zip
+.PHONY: release
+

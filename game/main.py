@@ -11,13 +11,13 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['dynamo_table'])
+table = dynamodb.Table(os.environ['DYNAMO_TABLE'])
 
 
 def flush_old_game():
   resp = table.scan() 
   for i in resp['Items']:
-    table.delete_item(Key={'GameId': i['GameId']})
+    table.delete_item(Key={'Player': i['Player']})
 
 
 def save_game(current_state):
@@ -42,7 +42,8 @@ def response(body, event, code=200):
     return {
         'statusCode': code,
         'headers': {},
-        'body': json.dumps(body, separators=(',', ':')) 
+        'body': json.dumps(body, indent=4, cls=DecimalEncoder, separators=(',', ':')) 
+        # 'body': json.dumps(body, separators=(',', ':')) 
       }
   return body
 

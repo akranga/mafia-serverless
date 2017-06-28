@@ -3,7 +3,8 @@ import os, sys
 script_dir = os.path.dirname( os.path.realpath(__file__) )
 sys.path.insert(0, script_dir + os.sep + "lib")
 
-import logging, boto3, uuid, json
+import logging, boto3, uuid, json, random
+from boto3.dynamodb.conditions import Key, Attr
 
 import game_controller
 
@@ -11,30 +12,38 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['dynamo_table'])
+table = dynamodb.Table(os.environ['DYNAMO_TABLE'])
 
 
-def flush_old_game():
-  resp = table.scan() 
-  for i in resp['Items']:
-    table.delete_item(Key={'GameId': i['GameId']})
+def save(player):
+  table.put_item(Item=player)
 
 
-def save_game(current_state):
-  table.put_item(Item=current_state)
+def clear_all():
+  for i in find_all():
+    table.delete_item(Key={'Name': i['Name']})
 
 
-def load_game():
-  resp = table.scan(Limit=1)
-  if resp['Count'] > 0:
-    return resp['Items'][0]
+def find_all():
+  return table.scan(IndexName='Masked')['Items']
 
-  return {
-    'GameId':     'game not started',
-    'Players':    [],
-    'LastAction': 'game not started', 
-    'Result':     'game not started'
-  }
+
+def find_all_uncovered():
+  return table.scan(
+           FilterExpression=Attr('Identity').eq('Uncovered')
+          )['Items']
+
+def find_by_identity(identity):
+  return table.scan(
+           FilterExpression=Attr('TrueIdentity').eq(identity) & 
+                            Attr('Identity').eq('Uncovered')
+          )['Items']
+
+def find_by_name(name):
+  return table.scan(
+           FilterExpression=Attr('Identity').eq('Uncovered') &
+                            Attr('Person').eq(name)
+          )['Items']
 
 
 def response(body, event, code=200):
@@ -42,90 +51,94 @@ def response(body, event, code=200):
     return {
         'statusCode': code,
         'headers': {},
-        'body': json.dumps(body, separators=(',', ':')) 
+        'body': json.dumps(body, indent=4, cls=DecimalEncoder, separators=(',', ':')) 
+        # 'body': json.dumps(body, separators=(',', ':')) 
       }
   return body
 
 
 def new_game_handler(event, context):
-  game = {
-    'GameId':     str(uuid.uuid1()),
-    'Players':    game_controller.new_game(),
-    'LastAction': 'new', 
-    'Result':     'unknown'
-  }
-  flush_old_game()
-  save_game(game)
-  names = [ player['Name'] for player in game['Players'] ]
+  num_of_players = int(os.environ['NUMBER_OF_PLAYERS'])
+  num_of_mafia   = int(os.environ['NUMBER_OF_MAFIA'])
+  players = game_controller.new_game(num_of_players, num_of_mafia)
+  
+  clear_all()
+  for player in players:
+    save(player)
+  names = [ p['Name'] for p in players ]
   message = "New game started with {}".format(', '.join(names))
-  return response( {"message": message}, event)
+  return response( {"message": message}, event )
 
 
-def game_state_handler(event, context):
-  game = load_game()
-  players = game['Players']
-  game_controller.hide_uncovered_identities( players )
-  return response(game, event)
+def game_state_handler(event, context): 
+  return find_all()
 
 
 def night_handler(event, context):
-  game = load_game()
-  players = game['Players']
+  players = find_by_identity('Innocent')
+  if len(players) == 0:
+    return response( mafia_win_message(), event)
 
-  victim = game_controller.victim_of_mafia(players)
+  victim  = random.choice(players)
+  victim['Identity'] = 'Killed by mafia'
 
-  players[victim]['Identity'] = 'killed'
-  game['LastAction']          = 'night murder'
-
-  save_game(game)
+  save(victim)
   return response( {"Message": [
       "Night, time to sleep",
-      "Mafia awaken",
-      "Mafia kills {}".format(players[victim]['Name']),
+      "Mafia awakes",
+      "Mafia kills {}".format(victim['Name']),
       "Mafia sleeps"
     ]}, event)
 
 
 def day_handler(event, context):
-  game = load_game()
-  players = game['Players']
-  accusations = game_controller.get_players_accusations(players)
-  log.info("accusations")
-  log.info(accusations)
-  game['LastAction'] = 'day accusations'
-  return response( {"Message": ["Day, time to awaken"
-                                "Players accuse each other"] 
-                                + accusations + 
-                               ["Who is the guilty?"] }, event)
+  message = [
+    "Day, time to wake up!",
+    "Players see the dead body and makes their accusations"
+  ]
+
+  innocent = find_by_identity('Innocent')
+  anybody  = find_all_uncovered()
+
+  for p in anybody:
+    if p['TrueIdentity'] == 'Mafia':
+      accused = random.choice(innocent)
+    else:
+      accused = random.choice(anybody)
+    message.append("{} blames on {}".format(p['Name'], accused['Name']))
+
+  message.append("Who is the Mafia?")
+  return response({"Message": message}, event)
+
 
 def judgement_handler(event, context):
   log.debug(json.dumps(event, separators=(',', ':')))
 
-  accused_player = event['queryStringParameters']['player']
+  name      = event['queryStringParameters']['Name']
+  sentenced = find_by_name(name)
 
-  game    = load_game()
-
-  players = game['Players']
-
-  accused = game_controller.find_by_name(players, accused_player)
-  if accused == None:
-    return response( {"Message": "Sorry player {} not found".format(accused_player)}, event, 404)
-
-  sentensed = players[accused]
-  if sentensed['Identity'] == 'mafia':
-    sentensed['Identity'] = 'Sentensed, guilty!'
-    sentence = "{} is guilty!".format(sentensed['Name'])
-  elif sentensed['Identity'] == 'innocent':
-    sentensed['Identity'] = 'Sentensed, not guilty!'
-    sentence = "{} is not guilty!".format(sentensed['Name'])
+  if sentenced['TrueIdentity'] == 'Mafia':
+    sentenced['Identity'] = 'Correctly sentenced'
+    message = [
+        'Mafia has been uncovered!'
+        'Guilty member of mafia {} has been sentenced!'.format(sentenced['Name'])
+      ]
   else:
-    return response( {"Message": "Sorry player {} is {} ".format(accused_player, sentensed['Identity'])}, event, 403) 
+    sentenced['Identity'] = 'Correctly sentenced'
+    message = [
+        'Mafia has not been uncovered!'
+        'Innocent {} has been sentenced unfairly'.format(sentenced['Name'])
+      ]
+  
+  save(sentenced)
+  return response({"Message": message}, event)
 
-  game['LastAction'] = 'judgement'
-  save_game(game)
 
-  return response( {"Message": [
-      "{} has been accused".format(sentensed['Name']),
-      "Plyers identity has been revealed",
-      sentence
-    ]}, event)
+def mafia_win_message():
+  return {
+    "Message": [
+      "Game Over!", 
+      "All innocent people has been killed by Mafia",
+      "Mafia have won this game!"
+    ]}
+
