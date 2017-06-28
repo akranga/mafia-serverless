@@ -215,7 +215,45 @@
       Properties: 
         Description: RESTful API
         Name: !Ref AWS::StackName
+    # StateMachine:
+    #   Type: AWS::StepFunctions::StateMachine
+    #   Properties:
+    #     RoleArn:
+    #       Fn::GetAtt: 
+    #       - "LambdaExecutionRole"
+    #       - "Arn"
   Outputs:
+    LambdaArn01NewGame:
+      Value: 
+        Fn::GetAtt: 
+          - "NewGameLamba"
+          - "Arn"
+      Description: New Game lambda function arn
+    LambdaArn02GetStateLamba:
+      Value: 
+        Fn::GetAtt: 
+          - "GetStateLamba"
+          - "Arn"
+      Description: GetStateLamba function arn
+    LambdaArn03NightTurn:
+      Value: 
+        Fn::GetAtt: 
+          - "NightTurn"
+          - "Arn"
+      Description: NightTurn lambda function arn
+    LambdaArn04DayTurn:
+      Value: 
+        Fn::GetAtt: 
+          - "DayTurn"
+          - "Arn"
+      Description: DayTurn lambda function arn
+    LambdaArn05JudgementTurn:
+      Value: 
+        Fn::GetAtt: 
+          - "JudgementTurn"
+          - "Arn"
+      Description: JudgementTurn lambda function arn
     TableName:
       Value: !Ref 'DynamoTable'
       Description: Table name of the newly created DynamoDB table
+
